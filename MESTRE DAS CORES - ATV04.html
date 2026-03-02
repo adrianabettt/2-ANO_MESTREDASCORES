@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>MESTRE DAS CORES E FORMAS - PROFª ADRIANA</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body { 
+            font-family: 'Arial', sans-serif; 
+            text-align: center; 
+            background: #F3E5F5; 
+            display: flex; 
+            flex-direction: column;
+            height: 100vh; 
+            overflow: hidden; 
+            text-transform: uppercase; 
+        }
+
+        header {
+            background: #4A148C;
+            color: white;
+            height: 6vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 1vh;
+            min-height: 0;
+        }
+
+        .box { 
+            width: 95%;
+            max-width: 800px;
+            height: 85vh; 
+            background: white; 
+            padding: 2vh; 
+            border-radius: 20px; 
+            border: 0.8vh solid #9C27B0; 
+            box-shadow: 0 1vh 2vh rgba(0,0,0,0.1); 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 { color: #7B1FA2; font-size: 3vh; margin: 0; }
+        
+        .alvo { 
+            font-size: 2.2vh; 
+            width: 100%;
+            padding: 1.2vh; 
+            border-radius: 12px; 
+            color: white; 
+            font-weight: bold; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+            background-color: #9C27B0;
+        }
+
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(5, 1fr); 
+            gap: 1vh; 
+            width: 100%;
+            flex: 1;
+            margin: 1vh 0;
+            align-content: center;
+        }
+
+        .item { 
+            font-size: 5.5vh; 
+            cursor: pointer; 
+            border: 0.4vh solid #EEE; 
+            border-radius: 12px; 
+            background: #F9F9F9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            aspect-ratio: 1/1;
+            max-height: 14vh;
+            width: 100%;
+            transition: 0.2s;
+        }
+
+        .item.selected { 
+            border-color: #9C27B0; 
+            background: #F3E5F5; 
+            transform: scale(1.03); 
+        }
+
+        .controles {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5vh;
+            padding-top: 1vh;
+        }
+
+        button { 
+            padding: 1.2vh 3vh; 
+            font-size: 2.2vh; 
+            cursor: pointer; 
+            background: #4CAF50; 
+            color: white; 
+            border: none; 
+            border-radius: 10px; 
+            font-weight: bold; 
+            box-shadow: 0 0.4vh #2E7D32; 
+        }
+
+        button:active { box-shadow: none; transform: translateY(0.4vh); }
+        
+        .progresso { font-size: 1.6vh; color: #666; font-weight: bold; }
+
+        footer {
+            height: 4vh;
+            background: #f1f1f1;
+            color: #555;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            border-top: 1px solid #ccc;
+        }
+
+        #tela-nota { display: none; }
+        #valor-nota { font-size: 12vh; font-weight: bold; color: #9C27B0; }
+    </style>
+</head>
+<body>
+
+    <header>PROFª ADRIANA BETT TEREBINTO</header>
+
+    <main>
+        <div id="jogo" class="box">
+            <h1>🎨 MESTRE DAS CORES E FORMAS</h1>
+            <div id="caixa-alvo" class="alvo">CARREGANDO...</div>
+            
+            <div class="grid" id="grade"></div>
+            
+            <div class="controles">
+                <button onclick="proximaFase()" id="btn-acao">PRÓXIMO DESAFIO</button>
+                <div class="progresso">DESAFIO: <span id="cont-fase">1</span> DE 10</div>
+            </div>
+        </div>
+
+        <div id="tela-nota" class="box" style="justify-content: center; gap: 2vh;">
+            <h1>🏁 FIM DA ATIVIDADE</h1>
+            <p style="font-size: 3vh;">SUA NOTA FINAL FOI:</p>
+            <div id="valor-nota">0</div>
+            <button onclick="location.reload()">JOGAR DE NOVO</button>
+        </div>
+    </main>
+
+    <footer>MATERIAL PEDAGÓGICO - PROFª ADRIANA BETT TEREBINTO © 2026</footer>
+
+<script>
+    // BANCO DE DADOS COMPLETO COM CORES E FORMAS
+    const emojis = [
+        {e: "🔴", cor: "VERMELHO", forma: "BOLA"}, {e: "🟥", cor: "VERMELHO", forma: "QUADRADO"}, {e: "❤️", cor: "VERMELHO", forma: "CORAÇÃO"}, {e: "⭐", cor: "AMARELO", forma: "ESTRELA"},
+        {e: "🔵", cor: "AZUL", forma: "BOLA"}, {e: "🟦", cor: "AZUL", forma: "QUADRADO"}, {e: "💙", cor: "AZUL", forma: "CORAÇÃO"}, {e: "🌟", cor: "AMARELO", forma: "ESTRELA"},
+        {e: "🟢", cor: "VERDE", forma: "BOLA"}, {e: "🟩", cor: "VERDE", forma: "QUADRADO"}, {e: "💚", cor: "VERDE", forma: "CORAÇÃO"}, {e: "🟡", cor: "AMARELO", forma: "BOLA"}, 
+		{e: "🟨", cor: "AMARELO", forma: "QUADRADO"}, {e: "💛", cor: "AMARELO", forma: "CORAÇÃO"}, 
+    ];
+
+    const metasCores = [
+        {nome: "VERMELHO", tipo: "cor", hex: "#E53935"},
+        {nome: "AMARELO", tipo: "cor", hex: "#FBC02D"},
+        {nome: "VERDE", tipo: "cor", hex: "#43A047"},
+        {nome: "AZUL", tipo: "cor", hex: "#1E88E5"}
+    ];
+
+    const metasFormas = [
+        {nome: "BOLAS", tipo: "forma", ref: "BOLA"},
+        {nome: "QUADRADOS", tipo: "forma", ref: "QUADRADO"},
+        {nome: "CORAÇÕES", tipo: "forma", ref: "CORAÇÃO"},
+        {nome: "ESTRELAS", tipo: "forma", ref: "ESTRELA"}
+    ];
+
+    let faseAtual = 1;
+    let somaNotas = 0;
+    let alvoAtual = {};
+
+    function iniciarFase() {
+        // Decide aleatoriamente se a meta será COR ou FORMA
+        const modo = Math.random() > 0.5 ? "cor" : "forma";
+        if (modo === "cor") {
+            alvoAtual = metasCores[Math.floor(Math.random() * metasCores.length)];
+        } else {
+            alvoAtual = metasFormas[Math.floor(Math.random() * metasFormas.length)];
+        }
+
+        const caixaAlvo = document.getElementById('caixa-alvo');
+        caixaAlvo.innerText = "CLIQUE EM TUDO QUE FOR: " + alvoAtual.nome;
+        caixaAlvo.style.backgroundColor = alvoAtual.hex || "#9C27B0";
+        
+        document.getElementById('cont-fase').innerText = faseAtual;
+        if (faseAtual === 10) document.getElementById('btn-acao').innerText = "VER NOTA FINAL";
+
+        const grade = document.getElementById('grade');
+        grade.innerHTML = "";
+        
+        // Sorteia 15 emojis aleatórios do banco
+        for(let i=0; i<15; i++) {
+            let itemSorteado = emojis[Math.floor(Math.random() * emojis.length)];
+            let div = document.createElement('div');
+            div.className = 'item';
+            div.innerText = itemSorteado.e;
+            div.onclick = () => div.classList.toggle('selected');
+            
+            // Atribui os dados para conferência
+            div.dataset.cor = itemSorteado.cor;
+            div.dataset.forma = itemSorteado.forma;
+            grade.appendChild(div);
+        }
+    }
+
+    function proximaFase() {
+        calcularNotaFase();
+        if (faseAtual < 10) {
+            faseAtual++;
+            iniciarFase();
+        } else {
+            finalizarJogo();
+        }
+    }
+
+    function calcularNotaFase() {
+        let acertos = 0;
+        let selecionados = 0;
+        const cards = document.querySelectorAll('.item');
+        let totalCertoNaTela = 0;
+
+        cards.forEach(el => {
+            const ehCerto = (alvoAtual.tipo === "cor") ? 
+                            (el.dataset.cor === alvoAtual.nome) : 
+                            (el.dataset.forma === alvoAtual.ref);
+            
+            if (ehCerto) totalCertoNaTela++;
+
+            if (el.classList.contains('selected')) {
+                selecionados++;
+                if (ehCerto) acertos++;
+            }
+        });
+
+        let notaRodada = (totalCertoNaTela > 0) ? (acertos / totalCertoNaTela) : 0;
+        let erros = selecionados - acertos;
+        notaRodada -= (erros * 0.2); 
+        
+        if (notaRodada < 0) notaRodada = 0;
+        somaNotas += notaRodada;
+    }
+
+    function finalizarJogo() {
+        document.getElementById('jogo').style.display = 'none';
+        document.getElementById('tela-nota').style.display = 'flex';
+        let notaFinal = Math.round(somaNotas);
+        if (notaFinal > 10) notaFinal = 10;
+        document.getElementById('valor-nota').innerText = notaFinal;
+    }
+
+    iniciarFase();
+</script>
+</body>
+</html>
