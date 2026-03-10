@@ -164,11 +164,12 @@
 
 <script>
     // BANCO DE DADOS COMPLETO COM CORES E FORMAS
-    const emojis = [
-        {e: "🔴", cor: "VERMELHO", forma: "BOLA"}, {e: "🟥", cor: "VERMELHO", forma: "QUADRADO"}, {e: "❤️", cor: "VERMELHO", forma: "CORAÇÃO"}, {e: "⭐", cor: "AMARELO", forma: "ESTRELA"},
-        {e: "🔵", cor: "AZUL", forma: "BOLA"}, {e: "🟦", cor: "AZUL", forma: "QUADRADO"}, {e: "💙", cor: "AZUL", forma: "CORAÇÃO"}, {e: "🌟", cor: "AMARELO", forma: "ESTRELA"},
-        {e: "🟢", cor: "VERDE", forma: "BOLA"}, {e: "🟩", cor: "VERDE", forma: "QUADRADO"}, {e: "💚", cor: "VERDE", forma: "CORAÇÃO"}, {e: "🟡", cor: "AMARELO", forma: "BOLA"}, 
-		{e: "🟨", cor: "AMARELO", forma: "QUADRADO"}, {e: "💛", cor: "AMARELO", forma: "CORAÇÃO"}, 
+   const emojis = [
+        {e: "🔴", cor: "VERMELHO", forma: "BOLA"}, {e: "🟥", cor: "VERMELHO", forma: "QUADRADO"}, {e: "❤️", cor: "VERMELHO", forma: "CORAÇÃO"},
+        {e: "🔵", cor: "AZUL", forma: "BOLA"}, {e: "🟦", cor: "AZUL", forma: "QUADRADO"}, {e: "💙", cor: "AZUL", forma: "CORAÇÃO"},
+        {e: "🟢", cor: "VERDE", forma: "BOLA"}, {e: "🟩", cor: "VERDE", forma: "QUADRADO"}, {e: "💚", cor: "VERDE", forma: "CORAÇÃO"},
+        {e: "🟡", cor: "AMARELO", forma: "BOLA"}, {e: "🟨", cor: "AMARELO", forma: "QUADRADO"}, {e: "💛", cor: "AMARELO", forma: "CORAÇÃO"},
+        {e: "⭐", cor: "AMARELO", forma: "ESTRELA"}, {e: "🌟", cor: "AMARELO", forma: "ESTRELA"}
     ];
 
     const metasCores = [
@@ -190,37 +191,51 @@
     let alvoAtual = {};
 
     function iniciarFase() {
-        // Decide aleatoriamente se a meta será COR ou FORMA
         const modo = Math.random() > 0.5 ? "cor" : "forma";
-        if (modo === "cor") {
-            alvoAtual = metasCores[Math.floor(Math.random() * metasCores.length)];
-        } else {
-            alvoAtual = metasFormas[Math.floor(Math.random() * metasFormas.length)];
-        }
+        alvoAtual = modo === "cor" 
+            ? metasCores[Math.floor(Math.random() * metasCores.length)]
+            : metasFormas[Math.floor(Math.random() * metasFormas.length)];
 
         const caixaAlvo = document.getElementById('caixa-alvo');
         caixaAlvo.innerText = "CLIQUE EM TUDO QUE FOR: " + alvoAtual.nome;
         caixaAlvo.style.backgroundColor = alvoAtual.hex || "#9C27B0";
         
         document.getElementById('cont-fase').innerText = faseAtual;
-        if (faseAtual === 10) document.getElementById('btn-acao').innerText = "VER NOTA FINAL";
+        document.getElementById('btn-acao').innerText = faseAtual === 10 ? "VER NOTA FINAL" : "PRÓXIMO DESAFIO";
 
         const grade = document.getElementById('grade');
         grade.innerHTML = "";
         
-        // Sorteia 15 emojis aleatórios do banco
-        for(let i=0; i<15; i++) {
-            let itemSorteado = emojis[Math.floor(Math.random() * emojis.length)];
+        // --- MELHORIA: GARANTIR QUE HAJA ALVOS NA TELA ---
+        let itensDaFase = [];
+        
+        // Filtra quais emojis atendem ao critério
+        const itensCertos = emojis.filter(item => 
+            alvoAtual.tipo === "cor" ? item.cor === alvoAtual.nome : item.forma === alvoAtual.ref
+        );
+
+        // Adiciona 4 itens obrigatoriamente certos
+        for(let i=0; i<4; i++) {
+            itensDaFase.push(itensCertos[Math.floor(Math.random() * itensCertos.length)]);
+        }
+
+        // Preenche o restante (11 itens) aleatoriamente
+        for(let i=0; i<11; i++) {
+            itensDaFase.push(emojis[Math.floor(Math.random() * emojis.length)]);
+        }
+
+        // Embaralha o array para os certos não ficarem todos no início
+        itensDaFase.sort(() => Math.random() - 0.5);
+
+        itensDaFase.forEach(itemSorteado => {
             let div = document.createElement('div');
             div.className = 'item';
             div.innerText = itemSorteado.e;
-            div.onclick = () => div.classList.toggle('selected');
-            
-            // Atribui os dados para conferência
             div.dataset.cor = itemSorteado.cor;
             div.dataset.forma = itemSorteado.forma;
+            div.onclick = () => div.classList.toggle('selected');
             grade.appendChild(div);
-        }
+        });
     }
 
     function proximaFase() {
@@ -234,10 +249,10 @@
     }
 
     function calcularNotaFase() {
-        let acertos = 0;
-        let selecionados = 0;
         const cards = document.querySelectorAll('.item');
         let totalCertoNaTela = 0;
+        let acertos = 0;
+        let selecionados = 0;
 
         cards.forEach(el => {
             const ehCerto = (alvoAtual.tipo === "cor") ? 
@@ -252,19 +267,23 @@
             }
         });
 
-        let notaRodada = (totalCertoNaTela > 0) ? (acertos / totalCertoNaTela) : 0;
+        // Cálculo: (Proporção de acertos) - (Penalidade por cliques errados)
+        let notaRodada = (acertos / totalCertoNaTela);
         let erros = selecionados - acertos;
-        notaRodada -= (erros * 0.2); 
+        notaRodada -= (erros * 0.15); // Penalidade levemente reduzida para ser pedagógico
         
-        if (notaRodada < 0) notaRodada = 0;
-        somaNotas += notaRodada;
+        somaNotas += Math.max(0, notaRodada); 
     }
 
     function finalizarJogo() {
         document.getElementById('jogo').style.display = 'none';
         document.getElementById('tela-nota').style.display = 'flex';
-        let notaFinal = Math.round(somaNotas);
+        
+        // A nota máxima possível é 10 (1.0 por rodada)
+        let notaFinal = Math.ceil(somaNotas); 
         if (notaFinal > 10) notaFinal = 10;
+        if (notaFinal < 0) notaFinal = 0;
+
         document.getElementById('valor-nota').innerText = notaFinal;
     }
 
@@ -272,3 +291,4 @@
 </script>
 </body>
 </html>
+
